@@ -65,6 +65,9 @@ type CachedStats struct {
 
 // NewDataStreamStats initializes DataStreamStats
 func NewDataStreamStats(capacity int) *DataStreamStats {
+	cached := CachedStats{
+		percentile: make(map[int]float64),
+	}
 	return &DataStreamStats{
 		minVal:          math.Inf(1),
 		maxVal:          math.Inf(-1),
@@ -72,6 +75,7 @@ func NewDataStreamStats(capacity int) *DataStreamStats {
 		upper:           MinHeap{},
 		recentData:      NewRingBuffer(capacity),
 		cachePercentile: make(map[int]float64),
+		cached:          cached,
 	}
 }
 
@@ -173,7 +177,7 @@ func (ds *DataStreamStats) GetPercentile(p float64) float64 {
 		return 0
 	}
 
-	index := int(math.Ceil((p / 100) * float64(len(sorted)))) - 1
+	index := int(math.Ceil((p/100)*float64(len(sorted)))) - 1
 	if index < 0 {
 		index = 0
 	}
@@ -204,7 +208,7 @@ type MinHeap []float64
 func (h MinHeap) Len() int           { return len(h) }
 func (h MinHeap) Less(i, j int) bool { return h[i] < h[j] }
 func (h MinHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
-func (h *MinHeap) Peek() float64     { return h[0] }
+func (h MinHeap) Peek() float64      { return h[0] }
 func (h *MinHeap) Push(x interface{}) {
 	*h = append(*h, x.(float64))
 }
@@ -221,8 +225,8 @@ type MaxHeap []float64
 
 func (h MaxHeap) Len() int           { return len(h) }
 func (h MaxHeap) Less(i, j int) bool { return h[i] > h[j] }
-func (h *MaxHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
-func (h *MaxHeap) Peek() float64      { return h[0] }
+func (h MaxHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
+func (h MaxHeap) Peek() float64      { return h[0] }
 func (h *MaxHeap) Push(x interface{}) {
 	*h = append(*h, x.(float64))
 }
