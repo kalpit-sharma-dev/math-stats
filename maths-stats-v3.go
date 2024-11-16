@@ -184,6 +184,27 @@ func (ds *DataStreamStats) GetPercentile(p float64) float64 {
 	return sorted[index]
 }
 
+// GetStandardDeviation calculates the standard deviation
+func (ds *DataStreamStats) GetStandardDeviation() float64 {
+	ds.minMaxLock.Lock()
+	defer ds.minMaxLock.Unlock()
+
+	if ds.count == 0 {
+		return 0
+	}
+	mean := ds.GetMean()
+	return math.Sqrt((ds.totalSqSum / float64(ds.count)) - mean*mean)
+}
+
+// GetRange calculates the range
+func (ds *DataStreamStats) GetRange() float64 {
+	ds.minMaxLock.Lock()
+	defer ds.minMaxLock.Unlock()
+	return ds.maxVal - ds.minVal
+}
+
+
+
 // GetCachedStats returns cached stats if available
 func (ds *DataStreamStats) GetCachedStats() CachedStats {
 	ds.cachedLock.Lock()
